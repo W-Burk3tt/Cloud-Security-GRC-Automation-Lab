@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-defender
+  namespace: security
+  labels:
+    app: defender
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: defender
+  template:
+    metadata:
+      labels:
+        app: defender
+    spec:
+      containers:
+      - name: security-spy
+        image: alpine:latest
+        command: ["/bin/sh", "-c", "while true; do echo 'LOG_ALERT: [WARNING] Unauthorized Terminal Session Spawned on Pod/JuiceShop-Deployment'; sleep 10; done"]
+        resources:
+          limits:
+            memory: "32Mi"
+            cpu: "100m"

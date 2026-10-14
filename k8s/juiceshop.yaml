@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: juiceshop-deployment
+  namespace: default
+  labels:
+    app: juiceshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: juiceshop
+  template:
+    metadata:
+      labels:
+        app: juiceshop
+    spec:
+      containers:
+      - name: juiceshop
+        image: bkimminich/juice-shop:latest
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            memory: "300Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: juiceshop-service
+  namespace: default
+spec:
+  type: NodePort
+  selector:
+    app: juiceshop
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30080
