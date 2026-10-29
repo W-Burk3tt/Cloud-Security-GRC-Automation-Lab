@@ -33,6 +33,9 @@ Deployed OWASP Juice Shop (a deliberately vulnerable web application) inside a l
 
 - Used browser dev tools to inspect session structure and locate client-side routes (e.g. `/#/score-board`)
 - Performed a manual SQL injection against the login form using a classic auth-bypass payload:
+  ```
+  admin@juice-sh.op' --
+  ```
   This comments out the rest of the SQL query server-side, bypassing the password check entirely and logging in as an administrator without valid credentials
 - Captured and reviewed local traffic with Wireshark to observe request/response behavior during testing
 
