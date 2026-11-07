@@ -1,0 +1,134 @@
+{
+    "groups": {},
+    "users": {
+        "zhwqhjzugyw05q1cpilh": {
+            "arn": "arn:aws:iam::000000000000:user/junior-analyst",
+            "create_date": "2026-11-05T04:51:48Z",
+            "id": "zhwqhjzugyw05q1cpilh",
+            "name": "junior-analyst",
+            "inline_policies": {},
+            "groups": {},
+            "path": "/",
+            "customer_managed_policies": {
+                "A80Z27VN3W3XOKYOGAAVH": "junior-analyst-self-service"
+            },
+            "aws_managed_policies": {},
+            "is_excluded": false
+        }
+    },
+    "roles": {},
+    "aws_managed_policies": {},
+    "customer_managed_policies": {
+        "A80Z27VN3W3XOKYOGAAVH": {
+            "PolicyName": "junior-analyst-self-service",
+            "PolicyId": "A80Z27VN3W3XOKYOGAAVH",
+            "Arn": "arn:aws:iam::000000000000:policy/junior-analyst-self-service",
+            "Path": "/",
+            "DefaultVersionId": "v1",
+            "AttachmentCount": 1,
+            "AttachedTo": {
+                "roles": [],
+                "groups": [],
+                "users": [
+                    "junior-analyst"
+                ]
+            },
+            "IsAttachable": true,
+            "CreateDate": null,
+            "UpdateDate": null,
+            "PolicyVersionList": [
+                {
+                    "Document": {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Sid": "IntendedSelfService",
+                                "Effect": "Allow",
+                                "Action": [
+                                    "iam:ChangePassword",
+                                    "iam:CreateAccessKey",
+                                    "iam:ListAccessKeys"
+                                ],
+                                "Resource": "arn:aws:iam::000000000000:user/junior-analyst"
+                            }
+                        ]
+                    },
+                    "VersionId": "v1",
+                    "IsDefaultVersion": true
+                }
+            ],
+            "PrivilegeEscalation": {
+                "severity": "high",
+                "description": "<p>These policies allow a combination of IAM actions that allow a principal with these permissions to escalate their privileges - for example, by creating an access key for another IAM user, or modifying their own permissions. This research was pioneered by Spencer Gietzen at Rhino Security Labs.  Remediation guidance can be found <a href=\"https://rhinosecuritylabs.com/aws/aws-privilege-escalation-methods-mitigation/\">here</a>.</p>",
+                "findings": [],
+                "links": {}
+            },
+            "DataExfiltration": {
+                "severity": "medium",
+                "description": "<div style=\"text-align:left\"><p>Policies with Data Exfiltration potential allow certain read-only IAM actions without resource constraints, such as <code>s3:GetObject</code>, <code>ssm:GetParameter*</code>, or <code>secretsmanager:GetSecretValue</code>. <br> <ul> <li>Unrestricted <code>s3:GetObject</code> permissions has a long history of customer data leaks.</li> <li><code>ssm:GetParameter*</code> and <code>secretsmanager:GetSecretValue</code> are both used to access secrets.</li> <li><code>rds:CopyDBSnapshot</code> and <code>rds:CreateDBSnapshot</code> can be used to exfiltrate RDS database contents.</li> </ul></p></div>",
+                "findings": []
+            },
+            "ResourceExposure": {
+                "severity": "high",
+                "description": "<p>Resource Exposure actions allow modification of Permissions to <a href=\"https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_identity-vs-resource.html\">resource-based policies</a> or otherwise can expose AWS resources to the public via similar actions that can lead to resource exposure - for example, the ability to modify <a href=\"https://docs.aws.amazon.com/ram/latest/userguide/what-is.html\">AWS Resource Access Manager</a>.</p>",
+                "findings": []
+            },
+            "ServiceWildcard": {
+                "severity": "medium",
+                "description": "<p>\"Service Wildcard\" is the unofficial way of referring to IAM policy statements that grant access to ALL actions under a service - like s3:*. Prioritizing the remediation of policies with this characteristic can help to efficiently reduce the total count of issues in the Cloudsplaining report.</p>",
+                "findings": []
+            },
+            "CredentialsExposure": {
+                "severity": "high",
+                "description": "<p>Credentials Exposure actions return credentials as part of the API response , such as ecr:GetAuthorizationToken, iam:UpdateAccessKey, and others. The full list is maintained here: https://gist.github.com/kmcquade/33860a617e651104d243c324ddf7992a</p>",
+                "findings": []
+            },
+            "InfrastructureModification": {
+                "severity": "low",
+                "description": "",
+                "findings": []
+            },
+            "is_excluded": false
+        }
+    },
+    "inline_policies": {},
+    "exclusions": {
+        "policies": [
+            "AWSServiceRoleFor*",
+            "*ServiceRolePolicy",
+            "*ServiceLinkedRolePolicy",
+            "AdministratorAccess",
+            "service-role*",
+            "aws-service-role*",
+            "/service-role*",
+            "/aws-service-role*",
+            "MyRole"
+        ],
+        "roles": [
+            "service-role*",
+            "aws-service-role*"
+        ],
+        "users": [
+            ""
+        ],
+        "groups": [
+            ""
+        ],
+        "include-actions": [
+            "s3:GetObject",
+            "ssm:GetParameter",
+            "ssm:GetParameters",
+            "ssm:GetParametersByPath",
+            "secretsmanager:GetSecretValue",
+            "rds:CopyDBSnapshot",
+            "rds:CreateDBSnapshot"
+        ],
+        "exclude-actions": [
+            ""
+        ],
+        "known-accounts": [
+            ""
+        ]
+    },
+    "links": {}
+}

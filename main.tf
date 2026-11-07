@@ -60,3 +60,43 @@ resource "aws_iam_policy" "wildcard_policy" {
     ]
   })
 }
+# ============================================================
+# IAM Privilege Escalation Lab (Phase 2 of project)
+# Intentionally vulnerable — demonstrates a real-world AWS
+# IAM privilege escalation chain via overly broad self-service
+# permissions, before remediation.
+# ============================================================
+
+resource "aws_iam_user" "junior_analyst" {
+  name = "junior-analyst"
+}
+
+# VULNERABLE: intended as a narrow "self-service account management"
+# policy, but written too broadly — grants the user the ability to
+# attach ANY managed policy (including AdministratorAccess) to
+# themselves, and to create arbitrary inline policies.
+resource "aws_iam_policy" "self_service_policy_vulnerable" {
+  name        = "junior-analyst-self-service"
+  description = "Remediated: scoped to self-service actions only, no policy-attachment permissions"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "IntendedSelfService"
+        Effect = "Allow"
+        Action = [
+          "iam:ChangePassword",
+          "iam:CreateAccessKey",
+          "iam:ListAccessKeys"
+        ]
+        Resource = "arn:aws:iam::000000000000:user/$${aws:username}"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_user_policy_attachment" "junior_analyst_attach" {
+  user       = aws_iam_user.junior_analyst.name
+  policy_arn = aws_iam_policy.self_service_policy_vulnerable.arn
+}
