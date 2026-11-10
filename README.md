@@ -43,13 +43,52 @@ Deployed OWASP Juice Shop (a deliberately vulnerable web application) inside a l
 
 Created a `security` namespace in the cluster and deployed a basic runtime monitor (`defender.yaml`) to log pod-level activity during testing.
 
+## Lab 3: IAM Privilege Escalation Detection & Remediation
+
+**Stack:** Terraform, LocalStack, AWS CLI, PMapper (evaluated), Cloudsplaining, Python
+
+### What was built
+
+Extended the LocalStack environment with a deliberately flawed IAM policy modeling a real-world privilege escalation pattern: a "junior analyst" IAM user intended to have narrow self-service permissions (change own password, manage own access keys), but whose policy was mistakenly written broad enough to also grant `iam:AttachUserPolicy` and `iam:PutUserPolicy` — permissions that let the user attach any policy to themselves, including full administrator access.
+
+### Tooling: PMapper vs. Cloudsplaining
+
+Initially tried **PMapper** (NCC Group's IAM graph-analysis tool) to automatically detect the escalation path. Getting it running surfaced two real compatibility issues, both fixed by patching the installed package directly:
+
+- PMapper's source used `from collections import Mapping, MutableMapping, OrderedDict` — an import style removed in Python 3.10+ (moved to `collections.abc`). Patched the two affected imports in the installed package.
+- LocalStack's mock STS service needed to be explicitly enabled (`SERVICES=s3,iam,sts`) before PMapper's credential check would pass.
+
+After resolving both, PMapper reached LocalStack's IAM API successfully but failed with a `KeyError: 'PolicyName'` while parsing AWS managed policies — a sign LocalStack Community Edition doesn't fully replicate that part of the real IAM API response shape. Rather than continuing to patch around an emulator fidelity gap, switched to **Cloudsplaining** (Salesforce's IAM policy auditor), which analyzes policy JSON documents directly instead of querying a live API — sidestepping the LocalStack compatibility issue entirely.
+
+### Scan results
+
+Running Cloudsplaining against the account's authorization details identified **5 distinct privilege escalation findings** on the `junior-analyst-self-service` policy, each matching a named, documented AWS escalation technique (research originally published by Spencer Gietzen, Rhino Security Labs):
+
+- `CreateAccessKey`, `AttachUserPolicy`, `PutUserPolicy` (direct)
+- `AttachUserPolicyThenCreateAccessKey`, `PutUserPolicyThenCreateAccessKey` (chained)
+
+Also flagged: 4 Resource Exposure findings and 1 Credentials Exposure finding, both tied to the unscoped `iam:CreateAccessKey` permission (see `iam-audit/before-scan-screenshot.png`).
+
+### Remediation
+
+Rewrote the policy to remove the `AttachUserPolicy`/`PutUserPolicy` statement entirely, and scoped the remaining self-service actions from `Resource: "*"` down to the specific user's own ARN (`arn:aws:iam::000000000000:user/junior-analyst`) — closing both the escalation path and a secondary issue where the "intended" permissions could have been used against *any* user, not just the policy holder.
+
+Applied via Terraform, then re-scanned with Cloudsplaining: all 5 Privilege Escalation findings, all Resource Exposure findings, and the Credentials Exposure finding were confirmed closed (`findings: []` across the board — see `iam-audit/after-scan-screenshot.png`).
+
+### Evidence
+
+- `iam-audit/before/` — Cloudsplaining scan results and HTML report against the vulnerable policy
+- `iam-audit/after/` — scan results and report after remediation, confirming all findings resolved
+- `iam-audit/before-scan-screenshot.png` — findings summary before the fix (5 Privilege Escalation, 4 Resource Exposure, 1 Credentials Exposure)
+- `iam-audit/after-scan-screenshot.png` — findings summary after remediation (all categories at zero)
+
 ## Why this project
 
 Built to apply cybersecurity/information assurance coursework hands-on: configuring and breaking real infrastructure, auditing it against actual compliance frameworks, and fixing what's found — rather than only working through theory. Companion project: [GRC-automation-agent](https://github.com/W-Burk3tt/GRC-automation-agent), which focuses on AI-assisted compliance crosswalking (CMMC 2.0 / PCI-DSS) rather than infrastructure-level testing.
 
 ## Setup
 
-Requires Docker Desktop (WSL2 backend), Terraform CLI, LocalStack, Prowler, and k3d. See `main.tf` for the Terraform configuration and `k8s/` for the Kubernetes manifests.
+Requires Docker Desktop (WSL2 backend), Terraform CLI, LocalStack, Prowler, k3d, AWS CLI, and Cloudsplaining. See `main.tf` for the Terraform configuration and `k8s/` for the Kubernetes manifests.
 
 ## Disclaimer
 
