@@ -1,0 +1,30 @@
+[
+  {
+    "timestamp": "2026-10-15T14:02:11Z",
+    "source_ip": "127.0.0.1",
+    "method": "POST",
+    "path": "/rest/user/login",
+    "body": "{\"email\":\"testuser@example.com\",\"password\":\"hunter2\"}"
+  },
+  {
+    "timestamp": "2026-10-15T14:05:33Z",
+    "source_ip": "127.0.0.1",
+    "method": "GET",
+    "path": "/rest/products/search?q=apple",
+    "body": ""
+  },
+  {
+    "timestamp": "2026-10-15T14:08:47Z",
+    "source_ip": "127.0.0.1",
+    "method": "POST",
+    "path": "/rest/user/login",
+    "body": "{\"email\":\"admin@juice-sh.op' --\",\"password\":\"anything\"}"
+  },
+  {
+    "timestamp": "2026-10-15T14:10:02Z",
+    "source_ip": "127.0.0.1",
+    "method": "GET",
+    "path": "/rest/products/search?q=banana",
+    "body": ""
+  }
+]
