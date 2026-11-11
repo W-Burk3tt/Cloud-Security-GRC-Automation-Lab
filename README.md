@@ -1,6 +1,6 @@
 # Local AWS Cloud Security & Kubernetes Security Lab
 
-Two self-contained labs built on an 8GB RAM laptop: a cloud misconfiguration/compliance lab using Terraform and LocalStack, and a web application attack lab using a containerized OWASP Juice Shop instance. Both run entirely locally — no AWS costs, no cloud account required.
+Four self-contained labs built on an 8GB RAM laptop, covering the core pillars of cloud security: prevention (fixing misconfigurations), offense (exploiting a real vulnerability), identity security (privilege escalation detection and remediation), and detection engineering (catching the attacks from the other labs in logs). All run entirely locally — no AWS costs, no cloud account required.
 
 ## Lab 1: Cloud Misconfiguration & Compliance Auditing
 
@@ -81,6 +81,32 @@ Applied via Terraform, then re-scanned with Cloudsplaining: all 5 Privilege Esca
 - `iam-audit/after/` — scan results and report after remediation, confirming all findings resolved
 - `iam-audit/before-scan-screenshot.png` — findings summary before the fix (5 Privilege Escalation, 4 Resource Exposure, 1 Credentials Exposure)
 - `iam-audit/after-scan-screenshot.png` — findings summary after remediation (all categories at zero)
+
+## Lab 4: Detection Engineering — Catching the Attacks from Labs 2 & 3
+
+**Stack:** Python (pattern matching, log analysis)
+
+### What was built
+
+Closed the loop on Labs 2 and 3 by building detection logic for the two attacks already executed against this environment, rather than stopping at "exploit it" or "fix the misconfiguration." Mock log data was constructed to mirror the real event data from each lab:
+
+- **`mock_cloudtrail_logs.json`** — modeled on the actual IAM API calls from Lab 3, mixing legitimate admin activity (an admin attaching a scoped policy to new hires) with the real escalation sequence (`junior-analyst` attaching `AdministratorAccess` to themselves, then creating an access key)
+- **`mock_access_logs.json`** — modeled on the actual HTTP requests from the Lab 2 Juice Shop SQL injection, mixing normal search/login traffic with the real `admin@juice-sh.op' --` auth-bypass payload
+
+### Detection rules
+
+- **`detect_iam_escalation.py`** — flags any `AttachUserPolicy` event where the acting principal and the target of the policy attachment are the same user, and the policy being attached grants broad/admin-level access. This specifically targets self-escalation, the exact pattern identified in Lab 3's Cloudsplaining findings.
+- **`detect_sqli.py`** — pattern-matches HTTP request bodies against a short, explainable set of common SQL injection indicators (comment injection, tautology-based bypass, UNION-based extraction, statement chaining) rather than an exhaustive signature list, keeping the detection logic's purpose and limitations clear.
+
+Both rules were verified against their respective mock log sets and correctly produced **one true positive and multiple true negatives each** — firing only on the actual attack, staying silent on legitimate activity in the same log.
+
+### Triage summary
+
+**`triage_summary.py`** runs both detections and produces a unified incident report with concrete next-step guidance for each alert type (disable compromised credentials and audit for downstream actions for the IAM finding; review session activity and patch the injection point for the SQLi finding) — the kind of first-pass analyst judgment that distinguishes detection from response.
+
+### Why this lab exists
+
+Labs 1-3 covered prevention (fixing misconfigurations before they're exploited) and offense (actually exploiting a vulnerability). This lab adds the third pillar: detecting an attack while or after it happens, which is the core function of a SOC analyst role. Building detection logic against real attack data from earlier labs, rather than synthetic textbook examples, keeps the detection rules grounded in what was actually exploitable in this environment.
 
 ## Why this project
 
